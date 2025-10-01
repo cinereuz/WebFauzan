@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\AnimeModel;
+use Illuminate\Support\Facades\Storage;
 
 class AnimeController extends Controller
 {
@@ -62,5 +63,75 @@ class AnimeController extends Controller
     {
         $anime = AnimeModel::findOrFail($id);
         return view('anime.show', compact('anime'));
+    }
+
+    // Fungsi untuk menampilkan form edit anime
+    public function edit($id)
+    {
+        $anime = AnimeModel::findOrFail($id);
+        
+        $genres = [
+            'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror',
+            'Mecha', 'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural'
+        ];
+
+        $selectedGenres = explode(', ', $anime->genre);
+
+        return view('anime.edit', compact('anime', 'genres', 'selectedGenres'));
+    }
+
+     // Fungsi untuk menyimpan hasil edit ke database
+    public function update(Request $request, $id)
+    {
+        $anime = AnimeModel::findOrFail($id);
+
+        // 1. Validasi data
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'genres' => 'required|array',
+            'episode' => 'required|integer',
+            'sinopsis' => 'nullable|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        // 2. Menggabungkan array genre menjadi string
+        $genreString = implode(', ', $request->genres);
+
+        // 3. Menangangani upload/perubahan gambar
+        $gambar = $anime->gambar;
+        if ($request->hasFile('gambar')) {
+            if ($gambar) {
+                Storage::delete('anime/' . $gambar);
+            }
+            $gambar = $request->file('gambar')->hashName();
+            $request->file('gambar')->storeAs('anime', $gambar);
+        }
+
+        // 4. Update data ke database
+        $anime->update([
+            'judul' => $request->judul,
+            'genre' => $genreString,
+            'episode' => $request->episode,
+            'sinopsis' => $request->sinopsis,
+            'gambar' => $gambar,
+        ]);
+
+        return redirect()->route('anime.index')->with('success', 'Anime berhasil diupdate!');
+    }
+
+    // Fungsi untuk menghapus data anime
+    public function destroy($id)
+    {
+        $anime = AnimeModel::findOrFail($id);
+
+        // Hapus file gambar dari storage
+        if ($anime->gambar) {
+            Storage::delete('anime/' . $anime->gambar);
+        }
+
+        // Hapus data anime dari database
+        $anime->delete();
+
+        return redirect()->route('anime.index')->with('success', 'Anime berhasil dihapus!');
     }
 }

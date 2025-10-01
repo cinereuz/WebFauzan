@@ -80,11 +80,10 @@
                                 <a href="{{ route('anime.show', $item->id) }}" class="btn btn-success btn-sm">Detail</a>
                                 <div>
                                     <a href="{{ route('anime.edit', $item->id) }}" class="btn btn-warning btn-sm me-1">Edit</a>
-                                    <form onsubmit="return confirm('Apakah Anda yakin ingin menghapus anime ini?');"
-                                          action="{{ route('anime.destroy', $item->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('anime.destroy', $item->id) }}" method="POST" class="d-inline delete-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                        <button type="submit" class="btn btn-danger btn-sm delete-btn">Hapus</button>
                                     </form>
                                 </div>
                             </div>
@@ -105,11 +104,38 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Logika SweetAlert2 untuk Notifikasi Sukses/Gagal
         @if (session('success'))
             Swal.fire({ icon: 'success', title: 'Sukses', text: '{{ session('success') }}' });
         @elseif (session('error'))
             Swal.fire({ icon: 'error', title: 'Gagal', text: '{{ session('error') }}' });
         @endif
+
+        // Logika SweetAlert2 untuk Konfirmasi Delete
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteForms = document.querySelectorAll('.delete-form');
+
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        title: 'Apakah Anda Yakin?',
+                        text: "Anime yang dihapus tidak dapat dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    })
+                });
+            });
+        });
     </script>
 </body>
 </html>
