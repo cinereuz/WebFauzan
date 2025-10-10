@@ -134,4 +134,39 @@ class AnimeController extends Controller
 
         return redirect()->route('anime.index')->with('success', 'Anime berhasil dihapus!');
     }
+    
+     // Export Data ke CSV/Excel
+    public function export()
+    {
+        $animes = AnimeModel::select('judul', 'genre', 'episode', 'sinopsis')->get();
+        
+        $fileName = 'data_anime_list_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function() use ($animes) {
+            $file = fopen('php://output', 'w');
+            $columns = ['Judul Anime', 'Genre', 'Jumlah Episode', 'Sinopsis'];
+            fputcsv($file, $columns, ';');
+
+            foreach ($animes as $anime) {
+                $sinopsis_bersih = strip_tags($anime->sinopsis);
+
+                fputcsv($file, [
+                    $anime->judul,
+                    $anime->genre,
+                    $anime->episode,
+                    $sinopsis_bersih
+                ], ';');
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
