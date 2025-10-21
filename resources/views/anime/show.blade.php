@@ -50,7 +50,14 @@
                         <div class="info-label">Sinopsis:</div>
                         <div class="info-text">{!! $anime->sinopsis !!}</div>
                     </div>
-                    
+
+                    @auth
+                        @if(!Auth::user()->is_admin)
+                            <a href="{{ route('payment.show', $anime->id) }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-shopping-cart me-2"></i> Beli Sekarang
+                            </a>
+                        @endif
+                    @endauth
                     <a href="{{ route('anime.index') }}" class="btn btn-primary mt-3">
                         <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar Anime
                     </a>

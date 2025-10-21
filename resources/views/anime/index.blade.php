@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Anime</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --primary-bg: #1c1c2e;
@@ -25,7 +25,7 @@
             min-height: 100vh;
         }
         .navbar { background-color: var(--secondary-bg); box-shadow: 0 2px 10px var(--card-shadow); }
-        .navbar-brand, .nav-link { font-weight: 700; color: var(--text-color) !important; }
+        .navbar-brand, .nav-link { font-weight: 700; color: var(--text-color) !important; transition: color 0.3s ease; }
         .nav-link:hover { color: var(--accent-color-1) !important; }
         .hero-section { background: linear-gradient(45deg, var(--accent-color-2) 0%, var(--accent-color-1) 100%); padding: 3rem 2rem; margin-bottom: 2rem; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #fff; position: relative; overflow: hidden; }
         .hero-section .display-4 { font-weight: 800; font-size: 2.5rem; text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4); }
@@ -51,20 +51,44 @@
     </style>
 </head>
 <body>
+    
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{{ route('anime.index') }}">MY ANIME LIST</a>
-            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     @auth
-                        <li class="nav-item">
-                            <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-sm btn-danger ms-2">
-                                    <i class="fas fa-sign-out-alt me-1"></i> Logout ({{ Auth::user()->name }})
-                                </button>
-                            </form>
+                        @if(Auth::user()->is_admin)
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                                </a>
+                            </li>
+                        @else
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('anime.library') }}">
+                                    <i class="fas fa-bookmark me-1"></i> Koleksi Saya
+                                </a>
+                            </li>
+                        @endif
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li>
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     @else
                         <li class="nav-item">
@@ -78,7 +102,6 @@
             </div>
         </div>
     </nav>
-
     <div class="container my-5 flex-grow-1">
         <div class="hero-section">
             <h1 class="display-4">Daftar Koleksi Anime</h1>
@@ -115,6 +138,11 @@
             @forelse ($anime as $item)
             <div class="col">
                 <div class="card anime-card h-100">
+                    @if(in_array($item->id, $purchasedAnimeIds))
+                        <span class="position-absolute top-0 start-0 m-2 badge rounded-pill bg-success" style="z-index: 10;">
+                            <i class="fas fa-check-circle me-1"></i> Dibeli
+                        </span>
+                    @endif
                     <img src="{{ asset('storage/anime/' . $item->gambar) }}" class="card-img-top" alt="{{ $item->judul }}">
 
                     <div class="card-body d-flex flex-column">
