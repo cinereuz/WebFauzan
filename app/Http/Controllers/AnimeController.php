@@ -2,18 +2,73 @@
 
 namespace App\Http\Controllers;
 
+// Ditambahkan untuk fitur baru
+use App\Models\Order;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
+// Bawaan dari kode Anda
 use Illuminate\Http\Request;
 use App\Models\AnimeModel;
 use Illuminate\Support\Facades\Storage;
 
 class AnimeController extends Controller
 {
-    // Untuk menampilkan halaman awal
+    /**
+     * MODIFIKASI: Menampilkan halaman awal dengan data anime yang sudah dibeli.
+     */
     public function index()
     {
         $anime = AnimeModel::latest()->paginate(10);
-        return view('anime.index', compact('anime'));
+
+        // Menambahkan logika untuk cek anime yang sudah lunas
+        $purchasedAnimeIds = [];
+        if (Auth::check()) {
+            $purchasedAnimeIds = Order::where('user_id', Auth::id())
+                                      ->whereIn('transaction_status', ['settlement', 'capture'])
+                                      ->pluck('anime_id')
+                                      ->toArray();
+        }
+        
+        // Mengirim data 'purchasedAnimeIds' ke view
+        return view('anime.index', compact('anime', 'purchasedAnimeIds'));
     }
+
+    /**
+     * BARU: Method untuk menampilkan dashboard admin.
+     */
+    public function adminDashboard()
+    {
+        $totalUsers = User::count();
+        $totalAnime = AnimeModel::count();
+        $totalRevenue = Order::whereIn('transaction_status', ['settlement', 'capture'])->sum('gross_amount');
+        $recentTransactions = Order::with('user', 'anime')->latest()->take(5)->get();
+
+        return view('admin.dashboard', compact(
+            'totalUsers',
+            'totalAnime',
+            'totalRevenue',
+            'recentTransactions'
+        ));
+    }
+
+    /**
+     * BARU: Method untuk menampilkan halaman "Koleksi Saya".
+     */
+    public function myLibrary()
+    {
+        $purchasedOrders = Order::where('user_id', Auth::id())
+                                  ->whereIn('transaction_status', ['settlement', 'capture'])
+                                  ->with('anime')
+                                  ->latest()
+                                  ->paginate(10);
+
+        return view('anime.library', compact('purchasedOrders'));
+    }
+
+    // ==================================================================
+    // == DI BAWAH INI ADALAH SEMUA METHOD LAMA ANDA (TIDAK DIUBAH) ==
+    // ==================================================================
 
     // Untuk menampilkan form tambah anime
     public function create()
@@ -43,7 +98,7 @@ class AnimeController extends Controller
         $gambar = null;
         if ($request->hasFile('gambar')) {
             $gambar = $request->file('gambar')->hashName();
-            $request->file('gambar')->storeAs('anime', $gambar);
+            $request->file('gambar')->storeAs('public/anime', $gambar); // Disesuaikan path-nya
         }
 
         // Simpan data ke database
@@ -101,10 +156,10 @@ class AnimeController extends Controller
         $gambar = $anime->gambar;
         if ($request->hasFile('gambar')) {
             if ($gambar) {
-                Storage::delete('anime/' . $gambar);
+                Storage::delete('public/anime/' . $gambar);
             }
             $gambar = $request->file('gambar')->hashName();
-            $request->file('gambar')->storeAs('anime', $gambar);
+            $request->file('gambar')->storeAs('public/anime', $gambar);
         }
 
         // 4. Update data ke database
@@ -126,7 +181,7 @@ class AnimeController extends Controller
 
         // Hapus file gambar dari storage
         if ($anime->gambar) {
-            Storage::delete('anime/' . $anime->gambar);
+            Storage::delete('public/anime/' . $anime->gambar);
         }
 
         // Hapus data anime dari database
