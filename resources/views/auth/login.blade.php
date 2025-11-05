@@ -126,8 +126,10 @@
                 <label for="password" class="form-label">Password</label>
                 <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password Anda" required>
             </div>
-            
             <button type="submit" class="btn btn-primary w-100 mb-3">LOGIN</button>
+            <div class="text-center mt-3">
+                <a href="{{ route('password.request') }}" style="color: var(--accent-color-2);">Lupa Password?</a>
+            </div>
             <p class="text-center mt-3 small text-muted">Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a></p>
         </form>
     </div>

@@ -37,3 +37,9 @@ Route::middleware(['auth'])->group(function () {
     // Rute Pengguna
     Route::get('/my-library', [AnimeController::class, 'myLibrary'])->name('anime.library');
 });
+
+// RUTE RESET PASSWORD
+Route::get('forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->name('password.phone');
+Route::get('reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update');

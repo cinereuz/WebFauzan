@@ -1,22 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
-
-// Ditambahkan untuk fitur baru
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
-// Bawaan dari kode Anda
 use Illuminate\Http\Request;
 use App\Models\AnimeModel;
 use Illuminate\Support\Facades\Storage;
 
 class AnimeController extends Controller
 {
-    /**
-     * MODIFIKASI: Menampilkan halaman awal dengan data anime yang sudah dibeli.
-     */
     public function index()
     {
         $anime = AnimeModel::latest()->paginate(10);
@@ -34,9 +27,7 @@ class AnimeController extends Controller
         return view('anime.index', compact('anime', 'purchasedAnimeIds'));
     }
 
-    /**
-     * BARU: Method untuk menampilkan dashboard admin.
-     */
+    // Method untuk menampilkan dashboard admin.
     public function adminDashboard()
     {
         $totalUsers = User::count();
@@ -52,9 +43,7 @@ class AnimeController extends Controller
         ));
     }
 
-    /**
-     * BARU: Method untuk menampilkan halaman "Koleksi Saya".
-     */
+    // Method untuk menampilkan halaman "Koleksi Saya".
     public function myLibrary()
     {
         $purchasedOrders = Order::where('user_id', Auth::id())
@@ -65,10 +54,6 @@ class AnimeController extends Controller
 
         return view('anime.library', compact('purchasedOrders'));
     }
-
-    // ==================================================================
-    // == DI BAWAH INI ADALAH SEMUA METHOD LAMA ANDA (TIDAK DIUBAH) ==
-    // ==================================================================
 
     // Untuk menampilkan form tambah anime
     public function create()
@@ -98,7 +83,7 @@ class AnimeController extends Controller
         $gambar = null;
         if ($request->hasFile('gambar')) {
             $gambar = $request->file('gambar')->hashName();
-            $request->file('gambar')->storeAs('public/anime', $gambar); // Disesuaikan path-nya
+            $request->file('gambar')->storeAs('public/anime', $gambar);
         }
 
         // Simpan data ke database

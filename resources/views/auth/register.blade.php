@@ -120,6 +120,10 @@
                 <input type="email" name="email" id="email" class="form-control" placeholder="Contoh: user@domain.com" value="{{ old('email') }}" required>
             </div>
             <div class="mb-3">
+                <label for="phone_number" class="form-label">Nomor WhatsApp</label>
+                <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" required>
+            </div>                  
+            <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" name="password" id="password" class="form-control" placeholder="Minimal 6 karakter" required>
             </div>
