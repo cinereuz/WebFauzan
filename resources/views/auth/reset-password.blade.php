@@ -20,14 +20,14 @@
                 <input type="hidden" name="email" value="{{ $email }}">
 
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password Baru</label>
+                    <label for="password" class="form-label text-white">Password Baru</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                     @error('password')
                         <div class="text-danger mt-1">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="mb-3">
-                    <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
+                    <label for="password_confirmation" class="form-label text-white">Konfirmasi Password</label>
                     <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
                 </div>
                 <button type="submit" class="btn w-100" style="background-color: var(--accent-color-2);">Reset Password</button>

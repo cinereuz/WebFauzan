@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\User;
 
@@ -62,7 +63,7 @@ class AuthController extends Controller
         return redirect(route('login'))->with('success', 'Anda telah berhasil logout!');
     }
 
-    // Menampilkan form untuk memasukkan nomor HP.
+    // -- Fungsi Reset Password --
     public function showForgotPasswordForm()
     {
         return view('auth.forgot-password');
@@ -70,54 +71,77 @@ class AuthController extends Controller
 
     public function sendResetLink(Request $request)
     {
-        $request->validate(['phone_number' => 'required|string|exists:users,phone_number']);
+        Log::info('--- PROSES RESET PASSWORD DIMULAI (TES BACA TOKEN) ---');
+        $request->validate([
+            'phone_number' => 'required|string|exists:users,phone_number',
+        ], [
+            'phone_number.exists' => 'Nomor WhatsApp tidak terdaftar.'
+        ]);
 
-        $user = User::where('phone_number', $request->phone_number)->first();
+        $phone_number = $request->phone_number;
+        $user = User::where('phone_number', $phone_number)->first();
 
         if (!$user) {
+            Log::warning('Gagal: Nomor HP tidak ditemukan di database.');
             return back()->withErrors(['phone_number' => 'Nomor WhatsApp tidak terdaftar.']);
         }
 
-        // Buat token
-        $token = Str::random(60);
+        Log::info('Sukses: Pengguna ditemukan -> ' . $user->email);
 
+        $token = Str::random(60);
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $user->email],
             ['token' => Hash::make($token), 'created_at' => now()]
         );
+        Log::info('Token reset telah dibuat dan disimpan untuk ' . $user->email);
 
-        // Buat URL reset
         $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
 
-        // Kirim pesan via Fonnte
         try {
-            $response = Http::post('https://api.fonnte.com/send', [
-                'target' => $user->phone_number,
-                'message' => "Halo! Klik link ini untuk reset password Anda: " . $resetUrl . "\n\nLink ini hanya valid selama 60 menit.",
-                'countryCode' => '62',
-            ], [
-                'Authorization' => env('FONNTE_TOKEN')
-            ]);
+            $token_fonnte = env('FONNTE_TOKEN');
+            if (empty($token_fonnte)) {
+                Log::error('Gagal: FONNTE_TOKEN kosong di .env');
+                return back()->withErrors(['phone_number' => 'Konfigurasi server error.']);
+            }
+            
+            Log::info('Token yang dibaca dari .env untuk dikirim: ' . $token_fonnte);
 
-            if ($response->failed()) {
-                return back()->withErrors(['phone_number' => 'Gagal mengirim pesan WhatsApp. Coba lagi nanti.']);
+            $target_number = $user->phone_number;
+            if (str_starts_with($target_number, '08')) {
+                $target_number = substr($target_number, 1);
             }
 
+            Log::info('Mencoba mengirim WA ke ' . $target_number . ' via Fonnte...');
+
+            $response = Http::withHeaders([
+                'Authorization' => $token_fonnte
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $target_number,
+                'message' => "Halo " . $user->name . "! Klik link ini untuk reset password kamu:\n" . $resetUrl . "\n\nLink ini hanya valid selama 60 menit.",
+                'countryCode' => '62',
+            ]);
+
+            if ($response->failed() || $response->json('status') == false) {
+                Log::error('Gagal kirim WA. Respon Fonnte: ' . $response->body());
+                return back()->withErrors(['phone_number' => 'Gagal mengirim pesan WhatsApp. Pastikan Device Fonnte Anda "Connected".']);
+            }
+
+            Log::info('Sukses: Pesan WA berhasil dikirim. Respon Fonnte: ' . $response->body());
+
         } catch (\Exception $e) {
+            Log::error('Exception saat mengirim WA: ' . $e->getMessage());
             return back()->withErrors(['phone_number' => 'Gagal terhubung ke server WhatsApp.']);
         }
 
         return back()->with('status', 'Link reset password telah dikirim ke WhatsApp Anda.');
     }
 
-    // Menampilkan form reset password (password baru).
     public function showResetPasswordForm(Request $request, $token = null)
     {
         $email = $request->email;
         return view('auth.reset-password', ['token' => $token, 'email' => $email]);
     }
 
-    // Memproses reset password.
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -137,12 +161,10 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Token reset password telah kedaluwarsa.']);
         }
 
-        // Update password user
         User::where('email', $request->email)->update([
             'password' => Hash::make($request->password)
         ]);
 
-        // Hapus token
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('login')->with('status', 'Password Anda berhasil direset! Silakan login.');
