@@ -133,6 +133,12 @@
             </div>
             
             <button type="submit" class="btn btn-primary w-100 mb-3">REGISTER</button>
+            <div class="text-center my-3">
+                <span class="text-white-50">atau</span>
+            </div>
+            <a href="{{ route('google.redirect') }}" class="btn btn-danger w-100">
+                <i class="fab fa-google me-2"></i> Register dengan Google
+            </a>
             <p class="text-center mt-3 small text-muted">Sudah punya akun? <a href="{{ route('login') }}">Login</a></p>
         </form>
     </div>

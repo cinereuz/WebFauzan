@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\User;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -168,5 +169,55 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('login')->with('status', 'Password Anda berhasil direset! Silakan login.');
+    }
+
+    // --- Fungsi Login Dengan Google ---
+
+    // Mengarahkan pengguna ke halaman autentikasi Google.
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+
+            // 1. Cari user berdasarkan google_id
+            $user = User::where('google_id', $googleUser->id)->first();
+
+            if ($user) {
+                // User sudah ada, langsung login
+                Auth::login($user);
+                return redirect()->intended(route('anime.index'));
+            }
+
+            // 2. Cek jika email sudah terdaftar tapi belum terhubung ke Google
+            $user = User::where('email', $googleUser->email)->first();
+
+            if ($user) {
+                // User ada, update google_id-nya dan login
+                $user->update(['google_id' => $googleUser->id]);
+                Auth::login($user);
+                return redirect()->intended(route('anime.index'));
+            }
+
+            // 3. Buat user baru jika tidak ada
+            $newUser = User::create([
+                'name' => $googleUser->name,
+                'email' => $googleUser->email,
+                'google_id' => $googleUser->id,
+                'password' => null,
+                'is_admin' => 0,
+            ]);
+
+            Auth::login($newUser);
+            return redirect()->intended(route('anime.index'));
+
+        } catch (\Exception $e) {
+            Log::error('Google Login Error: ' . $e->getMessage());
+            return redirect(route('login'))->withErrors(['email' => 'Gagal login dengan Google. Coba lagi nanti.']);
+        }
     }
 }

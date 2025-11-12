@@ -127,6 +127,12 @@
                 <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password Anda" required>
             </div>
             <button type="submit" class="btn btn-primary w-100 mb-3">LOGIN</button>
+            <div class="text-center my-3">
+                <span class="text-white-50">atau</span>
+            </div>
+            <a href="{{ route('google.redirect') }}" class="btn btn-danger w-100">
+                <i class="fab fa-google me-2"></i> Login dengan Google
+            </a>
             <div class="text-center mt-3">
                 <a href="{{ route('password.request') }}" style="color: var(--accent-color-2);">Lupa Password?</a>
             </div>

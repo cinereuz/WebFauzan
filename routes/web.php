@@ -43,3 +43,7 @@ Route::get('forgot-password', [AuthController::class, 'showForgotPasswordForm'])
 Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->name('password.phone');
 Route::get('reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
+// RUTE LOGIN DENGAN GOOGLE
+Route::get('/auth/google/redirect', [App\Http\Controllers\AuthController::class, 'redirectToGoogle'])->name('google.redirect');
+Route::get('/auth/google/callback', [App\Http\Controllers\AuthController::class, 'handleGoogleCallback'])->name('google.callback');
