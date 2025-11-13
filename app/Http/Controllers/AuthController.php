@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -43,7 +44,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
@@ -51,8 +52,11 @@ class AuthController extends Controller
             'is_admin' => (User::count() == 0) ? 1 : 0, 
         ]);
 
-        Auth::attempt($request->only('email', 'password'));
-        return redirect(route('anime.index'))->with('success', 'Registrasi berhasil! Anda telah login.');
+        // Kirim email verifikasi
+        event(new Registered($user));
+
+        // Arahkan ke halaman login dengan pesan sukses
+        return redirect(route('login'))->with('status', 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi.');
     }
 
     public function logout(Request $request)
@@ -210,6 +214,7 @@ class AuthController extends Controller
                 'google_id' => $googleUser->id,
                 'password' => null,
                 'is_admin' => 0,
+                'email_verified_at' => now(),
             ]);
 
             Auth::login($newUser);

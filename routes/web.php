@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AnimeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PaymentController;
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 // A. RUTE AUTENTIKASI (LOGIN/REGISTER)
 Route::get('/', [AuthController::class, 'showRegister'])->name('register');
@@ -14,7 +16,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // B. RUTE APLIKASI (Membutuhkan Login)
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     
     // Rute Read (Akses untuk User & Admin)
     Route::get('/anime', [AnimeController::class, 'index'])->name('anime.index');
@@ -47,3 +49,18 @@ Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('p
 // RUTE LOGIN DENGAN GOOGLE
 Route::get('/auth/google/redirect', [App\Http\Controllers\AuthController::class, 'redirectToGoogle'])->name('google.redirect');
 Route::get('/auth/google/callback', [App\Http\Controllers\AuthController::class, 'handleGoogleCallback'])->name('google.callback');
+
+// RUTE VERIFIKASI EMAIL
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/anime'); // Arahkan ke halaman utama setelah verifikasi
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'Link verifikasi baru telah dikirim ke email Anda!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
