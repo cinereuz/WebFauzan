@@ -34,6 +34,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/update-anime/{id}', [AnimeController::class, 'update'])->name('anime.update');
         Route::delete('/hapus-anime/{id}', [AnimeController::class, 'destroy'])->name('anime.destroy');
         Route::get('/anime/export', [AnimeController::class, 'export'])->name('anime.export');
+
+        Route::get('/admin/qr-codes', [AnimeController::class, 'qrIndex'])->name('admin.qr.index');
+        Route::post('/admin/qr-codes', [AnimeController::class, 'qrStore'])->name('admin.qr.store');
+        Route::get('/admin/qr-download/{code_id}', [AnimeController::class, 'qrDownload'])->name('admin.qr.download');
     });
 
     // Rute Pengguna

@@ -17,7 +17,12 @@
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="mb-4" style="color: var(--accent-color-2);">Admin Dashboard</h1>
-            <a href="{{ route('anime.index') }}" class="btn btn-outline-light">Lihat Halaman Utama</a>
+            <div>
+                <a href="{{ route('admin.qr.index') }}" class="btn btn-info me-2" style="background-color: var(--accent-color-2); border-color: var(--accent-color-2);">
+                    <i class="fas fa-qrcode me-1"></i> Manajemen QR
+                </a>
+                <a href="{{ route('anime.index') }}" class="btn btn-outline-light">Lihat Halaman Utama</a>
+            </div>
         </div>
 
         {{-- Statistik --}}

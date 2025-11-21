@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\AnimeModel;
 use Illuminate\Support\Facades\Storage;
+use App\Models\QrCode;
+use Illuminate\Support\Facades\Http;
 
 class AnimeController extends Controller
 {
@@ -208,5 +210,77 @@ class AnimeController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+
+    // Menampilkan halaman daftar QR Code dan form tambah.
+    public function qrIndex()
+    {
+        $qrCodes = QrCode::latest()->paginate(10);
+                            
+        return view('admin.qr_index', compact('qrCodes'));
+    }
+
+    // Membuat, menyimpan, dan mencatat QR Code baru dari GoQR.
+    public function qrStore(Request $request)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'code_id' => 'required|string|max:100|unique:qr_codes,code_id',
+        ], [
+            'code_id.unique' => 'ID tersebut sudah pernah dibuat. Masukkan ID lain.'
+        ]);
+
+        $codeId = $request->code_id;
+
+        // 2. Panggil API GoQR
+        $response = Http::get('https://api.qrserver.com/v1/create-qr-code/', [
+            'data' => $codeId,
+            'size' => '300x300',
+            'format' => 'png'
+        ]);
+
+        if ($response->failed()) {
+            return back()->with('error', 'Gagal menghubungi server QR Code. Coba lagi nanti.');
+        }
+
+        // 3. Tentukan Nama File dan Folder
+        $filename = $codeId . '.png';
+        
+        $folderPath = 'qrcodes/' . $filename; 
+
+        // 4. Simpan gambar menggunakan disk 'public' secara eksplisit
+        Storage::disk('public')->put($folderPath, $response->body());
+
+        // 5. Dapatkan URL publik yang benar
+        $publicUrl = Storage::url($folderPath); 
+
+        // 6. Simpan record ke database
+        QrCode::create([
+            'code_id' => $codeId,
+            'user_id' => Auth::id(),
+            'filename' => $filename,
+            'public_url' => $publicUrl,
+        ]);
+
+        return back()->with('success', 'QR Code untuk ID: ' . $codeId . ' berhasil dibuat!');
+    }
+
+    // Download gambar QR Code.
+   public function qrDownload($code_id)
+    {
+        // Cari record QR berdasarkan ID
+        $qr = QrCode::findOrFail($code_id);
+
+        // Nama file dan path relatif
+        $filePath = 'qrcodes/' . $qr->filename;
+
+        if (!Storage::disk('public')->exists($filePath)) {
+            abort(404, 'File tidak ditemukan di storage.');
+        }
+
+        $fullPath = storage_path('app/public/' . $filePath);
+
+        return response()->download($fullPath);
     }
 }
