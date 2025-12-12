@@ -38,6 +38,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/qr-codes', [AnimeController::class, 'qrIndex'])->name('admin.qr.index');
         Route::post('/admin/qr-codes', [AnimeController::class, 'qrStore'])->name('admin.qr.store');
         Route::get('/admin/qr-download/{code_id}', [AnimeController::class, 'qrDownload'])->name('admin.qr.download');
+
+        Route::get('/admin/locations', [App\Http\Controllers\LocationController::class, 'index'])->name('admin.locations.index');
+        Route::post('/admin/locations', [App\Http\Controllers\LocationController::class, 'store'])->name('admin.locations.store');
+        Route::delete('/admin/locations/{id}', [App\Http\Controllers\LocationController::class, 'destroy'])->name('admin.locations.destroy');
     });
 
     // Rute Pengguna

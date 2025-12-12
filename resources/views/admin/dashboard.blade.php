@@ -21,6 +21,9 @@
                 <a href="{{ route('admin.qr.index') }}" class="btn btn-info me-2" style="background-color: var(--accent-color-2); border-color: var(--accent-color-2);">
                     <i class="fas fa-qrcode me-1"></i> Manajemen QR
                 </a>
+                <a href="{{ route('admin.locations.index') }}" class="btn btn-warning me-2">
+                    <i class="fas fa-map-marked-alt me-1"></i> Lokasi Maps
+                </a>
                 <a href="{{ route('anime.index') }}" class="btn btn-outline-light">Lihat Halaman Utama</a>
             </div>
         </div>
