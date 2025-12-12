@@ -35,7 +35,6 @@
         .form-control::placeholder { color: #bbbbbb; opacity: 1; }
         .table-dark { --bs-table-bg: var(--secondary-bg); --bs-table-color: var(--text-color); }
 
-        /* Styling Rute & Popup agar Teks Hitam */
         .leaflet-routing-container, 
         .leaflet-routing-alt, 
         .leaflet-popup-content-wrapper {
@@ -161,30 +160,25 @@
         var currentLat, currentLng;
         var routingControl;
 
-        // --- FUNGSI UPDATE INPUT SAAT MARKER BERGERAK ---
         function updateInput(lat, lng) {
             document.getElementById('lat').value = lat;
             document.getElementById('lng').value = lng;
-            currentLat = lat; // Update variabel global user position
+            currentLat = lat;
             currentLng = lng;
         }
 
-        // --- FUNGSI MENAMBAHKAN MARKER DRAGGABLE ---
         function setMarker(lat, lng, message = "Lokasi Dipilih (Geser jika perlu)") {
             if (marker) map.removeLayer(marker);
             
-            // Tambahkan opsi draggable: true
             marker = L.marker([lat, lng], {draggable: true}).addTo(map)
                 .bindPopup(message).openPopup();
 
-            // Event saat marker selesai digeser (dragend)
             marker.on('dragend', function(e) {
                 var position = marker.getLatLng();
                 updateInput(position.lat, position.lng);
                 marker.bindPopup("Lokasi Baru").openPopup();
             });
 
-            // Update input form langsung
             updateInput(lat, lng);
             map.setView([lat, lng], 16);
         }
@@ -192,7 +186,6 @@
         // 2. Fungsi Deteksi Lokasi Saya
         function getLocation() {
             if (navigator.geolocation) {
-                // Saya naikkan timeout jadi 20 detik agar lebih sabar mencari sinyal
                 var options = {
                     enableHighAccuracy: true,
                     timeout: 20000, 
@@ -211,7 +204,6 @@
         }
 
         function showError(error) {
-            // Fallback: Jika error/timeout, jangan diam saja, beri alert
             switch(error.code) {
                 case error.PERMISSION_DENIED:
                     alert("User menolak permintaan Geolocation.");
@@ -236,15 +228,12 @@
         // 4. Menampilkan Marker untuk lokasi tersimpan (Database)
         var locations = @json($locations);
         locations.forEach(function(loc) {
-            // Marker database TIDAK draggable (statis)
             L.marker([loc.latitude, loc.longitude]).addTo(map)
                 .bindPopup(`<b>${loc.name}</b><br>${loc.description || ''}<br><button onclick="routeTo(${loc.latitude}, ${loc.longitude})" class="btn btn-xs btn-primary mt-2">Rute</button>`);
         });
 
         // 5. Fungsi Tracking Rute
         function routeTo(destLat, destLng) {
-            // Pastikan user sudah punya titik awal (bisa dari autodetect atau klik manual)
-            // Jika input lat/lng kosong, berarti belum ada titik awal
             var startLat = document.getElementById('lat').value;
             var startLng = document.getElementById('lng').value;
 

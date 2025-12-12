@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('latitude');
             $table->string('longitude');
             $table->string('description')->nullable();
-            $table->string('image')->nullable(); // Foto lokasi jika ada
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
