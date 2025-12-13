@@ -24,6 +24,9 @@
                 <a href="{{ route('admin.locations.index') }}" class="btn btn-warning me-2">
                     <i class="fas fa-map-marked-alt me-1"></i> Lokasi Maps
                 </a>
+                <a href="{{ route('admin.categories.index') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-list me-1"></i> Kategori (Livewire)
+                </a>
                 <a href="{{ route('anime.index') }}" class="btn btn-outline-light">Lihat Halaman Utama</a>
             </div>
         </div>
